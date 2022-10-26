@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "diffedit"
+  site-url: "https://melonkernel.github.io/diffedit"
+  description: "Notebook implementation of the DiffEdit pape"
+  repo-branch: master
+  repo-url: "https://github.com/melonkernel/diffedit"
