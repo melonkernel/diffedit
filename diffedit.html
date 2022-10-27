@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.251">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="A notebook for understanding and experimenting with the paper DiffEdit: Diffusion-based semantic image editing with mask guidance">
+
+<title>diffedit - DiffEdit</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="diffedit - DiffEdit">
+<meta property="og:description" content="A notebook for understanding and experimenting with the paper DiffEdit: Diffusion-based semantic image editing with mask guidance">
+<meta property="og:site-name" content="diffedit">
+<meta name="twitter:title" content="diffedit - DiffEdit">
+<meta name="twitter:description" content="A notebook for understanding and experimenting with the paper DiffEdit: Diffusion-based semantic image editing with mask guidance">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">diffedit</span>
+    </a>
+  </div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">DiffEdit</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">diffedit</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./core.html" class="sidebar-item-text sidebar-link">core</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./diffedit.html" class="sidebar-item-text sidebar-link active">DiffEdit</a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#how-to-read-a-paper" id="toc-how-to-read-a-paper" class="nav-link active" data-scroll-target="#how-to-read-a-paper">How to read a paper</a></li>
+  <li><a href="#first-pass" id="toc-first-pass" class="nav-link" data-scroll-target="#first-pass">First pass</a>
+  <ul class="collapse">
+  <li><a href="#title-diffedit-diffusion-based-semantic-image-editing-with-mask-guidance" id="toc-title-diffedit-diffusion-based-semantic-image-editing-with-mask-guidance" class="nav-link" data-scroll-target="#title-diffedit-diffusion-based-semantic-image-editing-with-mask-guidance">Title: <u>DiffEdit: Diffusion-based <mark>semantic</mark> image editing with <mark>mask guidance</mark></u></a></li>
+  <li><a href="#abstract" id="toc-abstract" class="nav-link" data-scroll-target="#abstract">Abstract</a></li>
+  <li><a href="#figure-1" id="toc-figure-1" class="nav-link" data-scroll-target="#figure-1">Figure 1</a></li>
+  </ul></li>
+  <li><a href="#second-pass" id="toc-second-pass" class="nav-link" data-scroll-target="#second-pass">Second Pass</a>
+  <ul class="collapse">
+  <li><a href="#intro" id="toc-intro" class="nav-link" data-scroll-target="#intro">Intro</a>
+  <ul class="collapse">
+  <li><a href="#problem---existing-approaces-makes-you-loose-data" id="toc-problem---existing-approaces-makes-you-loose-data" class="nav-link" data-scroll-target="#problem---existing-approaces-makes-you-loose-data">Problem - Existing approaces makes you loose data</a></li>
+  <li><a href="#solution---automatically-paint-what-region-needs-to-change-and-only-change-that" id="toc-solution---automatically-paint-what-region-needs-to-change-and-only-change-that" class="nav-link" data-scroll-target="#solution---automatically-paint-what-region-needs-to-change-and-only-change-that">Solution - Automatically paint what region needs to change and only change that</a></li>
+  </ul></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  <li><a href="#figures-againg" id="toc-figures-againg" class="nav-link" data-scroll-target="#figures-againg">Figures againg</a>
+  <ul class="collapse">
+  <li><a href="#figure-2" id="toc-figure-2" class="nav-link" data-scroll-target="#figure-2">Figure 2</a></li>
+  <li><a href="#figure-5" id="toc-figure-5" class="nav-link" data-scroll-target="#figure-5">Figure 5</a></li>
+  </ul></li>
+  <li><a href="#skim-the-rest" id="toc-skim-the-rest" class="nav-link" data-scroll-target="#skim-the-rest">Skim the rest</a></li>
+  <li><a href="#code" id="toc-code" class="nav-link" data-scroll-target="#code">Code</a></li>
+  <li><a href="#semantic-image-editing-with-diffedit" id="toc-semantic-image-editing-with-diffedit" class="nav-link" data-scroll-target="#semantic-image-editing-with-diffedit">3.2 SEMANTIC IMAGE EDITING WITH DIFFEDIT</a></li>
+  <li><a href="#step-1-computing-editing-mask." id="toc-step-1-computing-editing-mask." class="nav-link" data-scroll-target="#step-1-computing-editing-mask.">Step 1: Computing editing mask.</a></li>
+  <li><a href="#step-2-encoding." id="toc-step-2-encoding." class="nav-link" data-scroll-target="#step-2-encoding.">Step 2: Encoding.</a></li>
+  <li><a href="#step-3-decoding-with-mask-guidance." id="toc-step-3-decoding-with-mask-guidance." class="nav-link" data-scroll-target="#step-3-decoding-with-mask-guidance.">Step 3: Decoding with mask guidance.</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/melonkernel/diffedit/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">DiffEdit</h1>
+</div>
+
+<div>
+  <div class="description">
+    A notebook for understanding and experimenting with the paper <a href="https://arxiv.org/abs/2210.11427">DiffEdit: Diffusion-based semantic image editing with mask guidance</a>
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    
+  </div>
+  
+
+</header>
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<section id="how-to-read-a-paper" class="level1">
+<h1>How to read a paper</h1>
+<p>Accoding to <a href="https://www.youtube.com/watch?v=733m6qBH-jI&amp;t=460s">Andrew Ng</a>, You should not read a paper from start to finish, but do it in several passes, focusing on the parts that will give you an idea of what the paper is about.</p>
+<ol type="1">
+<li>Title, Abstract, Figures</li>
+<li>Intro, Conclusion, Figures again, Skim the rest</li>
+</ol>
+<p>In this notebook, we will try to get an overview of the paper: <a href="https://arxiv.org/abs/2210.11427">DiffEdit: Diffusion-based semantic image editing with mask guidance</a></p>
+</section>
+<section id="first-pass" class="level1">
+<h1>First pass</h1>
+<section id="title-diffedit-diffusion-based-semantic-image-editing-with-mask-guidance" class="level2">
+<h2 class="anchored" data-anchor-id="title-diffedit-diffusion-based-semantic-image-editing-with-mask-guidance">Title: <u>DiffEdit: Diffusion-based <mark>semantic</mark> image editing with <mark>mask guidance</mark></u></h2>
+<p>So this paper is about something <code>semantic</code>, i.e.&nbsp;it is based on text. And then we edit images based on a <code>mask</code> to guide it.</p>
+<p><strong>Semantic</strong></p>
+<blockquote class="blockquote">
+<p>Relating to meaning in language or logic.</p>
+</blockquote>
+<p><strong>Mask</strong></p>
+<blockquote class="blockquote">
+<p>An image that acts as a cookie cutter, with instructions on what to keep and what to remove.</p>
+</blockquote>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/masking_1.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">masking</figcaption><p></p>
+</figure>
+</div>
+<p>Source: <a href="https://yesimadesigner.com/our-ultimate-guide-to-masking-photoshop-cc-2019/">Shmu Perhiniak, yesimadesigner.com</a></p>
+</section>
+<section id="abstract" class="level2">
+<h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
+<p>Image generation has recently seen tremendous advances, with diffusion models allowing to synthesize convincing images for a large variety of text prompts. In this article, we propose <mark>DiffEdit, a method to take advantage of text-conditioned diffusion models for the task of semantic image editing, where the goal is to edit an image based on a text query.</mark> Semantic image editing is an <u>extension of image generation, with the additional constraint that the generated image should be as similar as possible to a given input image</u>. Current editing methods based on diffusion models usually require to provide a mask, making the task much easier by treating it as a conditional inpainting task. In contrast, <mark>our main contribution is able to automatically generate a mask</mark> highlighting regions of the input image that need to be edited, by contrasting predictions of a diffusion model conditioned on different text prompts. Moreover, we rely on latent inference to preserve content in those regions of interest and show excellent synergies with mask-based diffusion. DiffEdit achieves state-of-the-art editing performance on ImageNet. In addition, we evaluate semantic image editing in more challenging settings, using images from the COCO dataset as well as text-based generated images.</p>
+</section>
+<section id="figure-1" class="level2">
+<h2 class="anchored" data-anchor-id="figure-1">Figure 1</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/diffedit1.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Figure 1</figcaption><p></p>
+</figure>
+</div>
+<p>In semantic image editing the goal is to <mark>modify an input image based on a textual query</mark>, while otherwise <mark>leaving the image as close as possible to the original</mark>. In our DIFFEDIT approach, <u>a mask generation module determines which part of the image should be edited</u>, and an encoder infers the latents, to provide inputs to a text-conditional diffusion model which produces the image edit.</p>
+</section>
+</section>
+<section id="second-pass" class="level1">
+<h1>Second Pass</h1>
+<section id="intro" class="level2">
+<h2 class="anchored" data-anchor-id="intro">Intro</h2>
+<p>The task of <mark>semantic image editing consists in modifying an input image in accordance with a textual transformation query</mark>. For instance, given an image of a bowl of fruits and the query “fruits” → “pears”, <mark>the aim is to produce a novel image where the fruits have been changed into pears</mark>, <u>while keeping the bowl and the background as similar as possible to the input image.</u></p>
+<p>The text query can also be a more elaborate description like “A basket of fruits”. See the example edits obtained with DIFFEDIT in Figure 1.</p>
+<p>Semantic image editing bears strong similarities with image generation and can be viewed as extending text-conditional image generation with an additional constraint: <mark>the generated image should be as close as possible to a given input image.</mark></p>
+<section id="problem---existing-approaces-makes-you-loose-data" class="level3">
+<h3 class="anchored" data-anchor-id="problem---existing-approaces-makes-you-loose-data">Problem - Existing approaces makes you loose data</h3>
+<p>(I added this subheading, also you can skip this)</p>
+<p>Text-conditional image generation is currently undergoing a revolution, with DALL-E (Ramesh et al., 2021), Cogview (Ding et al., 2021), Make-a-scene (Gafni et al., 2022), Latent Diffusion Models (Rombach et al., 2022), DALL-E 2 (Ramesh et al., 2022) and Imagen (Saharia et al., 2022b),vastly improving state of the art in modelling wide distributions of images and allowing for unprecedented compositionality of concepts in image generation. Scaling these models is a key to their success. State-of-the art models are now trained on vast amounts of data, which requires large computational resources. Similarly to language models pretrained on web-scale data and adapted in downstreams tasks with prompt engineering, the generative power of these big generative models can be harnessed to solve semantic image editing, avoiding to train specialized architectures (Li et al., 2020a; Wang et al., 2022a), or to use costly instance-based optimization (Crowson et al., 2022; Couairon et al., 2022; Patashnik et al., 2021). Diffusion models are an especially interesting class of model for image editing because of their iterative denoising process starting from random Gaussian noise. This process can be guided through a variety of techniques, like CLIP guidance (Nichol et al., 2021; Avrahami et al., 2022; Crowson, 2021), and inpainting by copy-pasting pixel values outside a user-given mask (Lugmayr et al., 2022). <mark>These previous works, however, lack two crucial properties for semantic image editing:</mark> (i) <strong>inpainting discards information</strong> about the input image that should be used in image editing (e.g.&nbsp;changing a dog into a cat should not modify the animal’s color and pose); (ii) <strong>a mask must be provided</strong> as input to <u>tell the diffusion model what parts of the image should be edited</u>.</p>
+<p>We believe that while drawing masks is common on image editing tools like Photoshop, language-guided editing offers a more intuitive interface to modify images that requires less effort from users. Conditioning a diffusion model on an input image <em><strong>can also be done without a mask</strong></em>, e.g.&nbsp;by considering the <strong>distance to input image as a loss function</strong> (Crowson, 2021; Choi et al., 2021), or by <strong>using a noised version of the input image as a starting point</strong> for the denoising process as in SDEdit (Meng et al., 2021). <mark>However, these editing methods tend to modify the entire image, whereas we aim for localized edits.</mark> Furthermore, <strong>adding noise</strong> to the input image <strong>discards important information</strong>, both inside the region that should be edited and outside.</p>
+</section>
+<section id="solution---automatically-paint-what-region-needs-to-change-and-only-change-that" class="level3">
+<h3 class="anchored" data-anchor-id="solution---automatically-paint-what-region-needs-to-change-and-only-change-that">Solution - Automatically paint what region needs to change and only change that</h3>
+<p>(I added this subheading)</p>
+<p>To leverage the best of both worlds, we propose <mark>DIFFEDIT, an algorithm that automatically finds what regions of an input image should be edited given a text query.</mark></p>
+<blockquote class="blockquote">
+<p><strong>By <u>contrasting</u> the <em>predictions</em> of a <u>conditional</u> and <u>unconditional</u> diffusion model</strong>, we are able to <mark>locate where editing is needed</mark> to match the text query.</p>
+</blockquote>
+<p>We also show how using a <mark>reference text describing the input image</mark> <strong>and similar to the query</strong>, can help obtain <strong>better masks</strong>. Moreover, we demonstrate that using a <mark><u>reverse denoising model</u>, to <u>encode</u> the input image in latent space,</mark> rather than simply adding noise to it, allows to <mark>better integrate the edited region into the background</mark> and produces more subtle and natural edits. See Figure 1 for illustrations.</p>
+<p>We quantitatively evaluate our approach and compare to prior work using images of the ImageNet and COCO dataset, as well as a set of generated images.</p>
+</section>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>We introduced DIFFEDIT, a novel algorithm for semantic image editing based on diffusion models. <mark>Given a textual query, using the diffusion model, DIFFEDIT infers the relevant regions to be edited rather than requiring a user generated mask.</mark> Furthermore, in contrast to other diffusion-based methods, we initialize the generation process with a <mark>DDIM encoding of the input</mark>.We provide theoretical analysis that motivates this choice, and show experimentally that <mark>this approach conserves more appearance information from the input image, leading to lighter edits.</mark> Quantitative and qualitative evaluations on ImageNet, COCO, and images generated by Imagen, show that our approach leads excellent edits, improving over previous approaches.</p>
+</section>
+<section id="figures-againg" class="level2">
+<h2 class="anchored" data-anchor-id="figures-againg">Figures againg</h2>
+<section id="figure-2" class="level3">
+<h3 class="anchored" data-anchor-id="figure-2">Figure 2</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/diffedit2.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Figure 2</figcaption><p></p>
+</figure>
+</div>
+<p>Figure 2: The three steps of DIFFEDIT.</p>
+<p>Step 1: we add noise to the input image, and denoise it: once conditioned on the query text, and once conditioned on a reference text (or unconditionally). <mark>We derive a mask based on the difference in the denoising results</mark>.</p>
+<p>Step 2: we <mark>encode</mark> the input image with <mark>DDIM</mark>, <u><strong>to estimate the latents</strong> corresponding to the input image</u>.</p>
+<p>Step 3: we perform <mark>DDIM decoding</mark> <u>conditioned on the text query</u>, <strong>using the inferred mask to replace the background</strong> with pixel values coming from the encoding process at the corresponding timestep.</p>
+</section>
+<section id="figure-5" class="level3">
+<h3 class="anchored" data-anchor-id="figure-5">Figure 5</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/diffedit3.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Figure 5</figcaption><p></p>
+</figure>
+</div>
+<p>Figure 5: Edits obtained on ImageNet with DIFFEDIT and ablated models.</p>
+<p>Encode-Decode is DIFFEDIT without masking, and</p>
+<p>SDEdit is obtained when not using masking nor encoding.</p>
+<p>When not using masking (SDEdit and Encode-Decode) we observe undesired edits to the background, see e.g.&nbsp;the sky in the second column. When not using DDIM encoding (SDEdit and DiffEdit w/o Encode), appearance information from the input —such as pose— is lost, see last two columns.</p>
+</section>
+</section>
+<section id="skim-the-rest" class="level2">
+<h2 class="anchored" data-anchor-id="skim-the-rest">Skim the rest</h2>
+<p><a href="https://arxiv.org/pdf/2210.11427.pdf">Here you go</a></p>
+</section>
+<section id="code" class="level2">
+<h2 class="anchored" data-anchor-id="code">Code</h2>
+</section>
+<section id="semantic-image-editing-with-diffedit" class="level2">
+<h2 class="anchored" data-anchor-id="semantic-image-editing-with-diffedit">3.2 SEMANTIC IMAGE EDITING WITH DIFFEDIT</h2>
+<p>In many cases, semantic image edits can be restricted to only a part of the image, leaving other parts unchanged. However, the input text query does not explicitly identify this region, and a naive method could allow for edits all over the image, risking to modify the input in areas where it is not needed. To circumvent this, <mark>we propose DIFFEDIT, a method to leverage a text-conditioned diffusion model to infer a mask of the region that needs to be edited.</mark> Starting from a <strong>DDIM encoding of the input image</strong>, DIFFEDIT uses the <strong>inferred mask</strong> to guide the <strong>denoising</strong> process, minimizing edits outside the region of interest. Figure 2 illustrates the three steps of our approach, which we detail below.</p>
+</section>
+<section id="step-1-computing-editing-mask." class="level2">
+<h2 class="anchored" data-anchor-id="step-1-computing-editing-mask.">Step 1: Computing editing mask.</h2>
+<p>When the denoising an image, a text-conditioned diffusion model will yield different noise estimates given different text conditionings. <mark>We can consider where the estimates are different, which gives information about what image regions are concerned by the change in conditioning text.</mark> For instance, in Figure 2, the noise estimates conditioned to the query <mark>zebra and reference text horse are different on the body of the animal</mark>, where they will tend to decode different colors and textures depending on the conditioning. For the background, on the other hand, there is little change in the noise estimates.</p>
+<p>The difference between the noise estimates can thus be used to infer a mask that identifies what parts on the image need to be changed to match the query.</p>
+<blockquote class="blockquote">
+<p>In our algorithm, we use a <mark>Gaussian noise with strength 50%</mark> (see analysis in Appendix A.1), <mark>remove extreme values in noise predictions</mark> and stabilize the effect by <mark>averaging spatial differences over a set of n input noises</mark>, with <code>n= 10</code> in our default configuration. The result is then <mark>rescaled to the <code>range [0, 1]</code></mark>, and <mark>binarized with a threshold</mark>, which we set to <code>0.5</code> by default.</p>
+</blockquote>
+<p>The masks generally somewhat overshoot the region that requires editing, this is beneficial as it allows it to be smoothly embedded in it’s context, see examples in Section 4 and Section A.5.</p>
+</section>
+<section id="step-2-encoding." class="level2">
+<h2 class="anchored" data-anchor-id="step-2-encoding.">Step 2: Encoding.</h2>
+<p>We encode the input image x0 in the implicit latent space at timestep r with the DDIM encoding function Er. This is done with the unconditional model, i.e.&nbsp;using conditioning text ∅, so no text input is used for this step. 1We can also use an empty reference text, which we denote as Q = ∅. 4 Preprint. Under review.</p>
+</section>
+<section id="step-3-decoding-with-mask-guidance." class="level2">
+<h2 class="anchored" data-anchor-id="step-3-decoding-with-mask-guidance.">Step 3: Decoding with mask guidance.</h2>
+<p>After obtaining the latent xr, we decode it with our diffusion model conditioned on the editing text query Q, e.g.&nbsp;zebra in the example of Figure 2. We use our mask M to guide this diffusion process. Outside the mask M, the edited image should in principle be the same as the input image. We guide the diffusion model by replacing pixel values outside the mask with the latents xt inferred with DDIM encoding, which will naturally map back to the original pixels through decoding, unlike when using a noised version of x0 as typically done (Meng et al., 2021; Song et al., 2021). The mask-guided DDIM update can be written as ˜yt = Myt + (1−M)xt, where yt is computed from yt−dt with Eq. 2, and xt is the corresponding DDIM encoded latent. The encoding ratio r determines the strength of the edit: larger values of r allow for stronger edits that allow to better match the text query, at the cost of more deviation from the input image which might not be needed. We evaluate the impact of this parameter in our experiments. We illustrate the effect of the encoding ratio in Appendix A.5</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
